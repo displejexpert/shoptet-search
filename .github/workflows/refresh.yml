@@ -1,0 +1,31 @@
+name: Update JSON from XML feed
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Každou hodinu
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Download and convert XML to JSON
+        run: |
+          curl -s https://www.krytnamobil.cz/heureka/export/products.xml -o products.xml
+          python3 convert.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add products.json
+          git commit -m "Update products.json from XML"
+          git push
