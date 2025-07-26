@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Fulltextové vyhledávání produktů (Shoptet)</title>
+  <script src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    input { width: 100%; padding: 10px; font-size: 1.2em; }
+    ul { list-style: none; padding: 0; }
+    li { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    img { max-width: 100px; vertical-align: middle; margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🔍 Vyhledávání produktů z Shoptet feedu</h2>
+  <input type="text" id="search" placeholder="Zadej název, EAN nebo popis...">
+  <ul id="results"></ul>
+  <script>
+    const index = new FlexSearch.Document({ document: { id: "ITEM_ID", index: ["PRODUCTNAME", "DESCRIPTION", "EAN"] } });
+    let products = [];
+
+    async function loadJSONFeed() {
+      const response = await fetch("products.json");
+      const data = await response.json();
+      products = data;
+      products.forEach(product => index.add(product));
+    }
+
+    document.getElementById("search").addEventListener("input", async e => {
+      const query = e.target.value;
+      const results = await index.searchAsync(query, { enrich: true });
+      const ids = [...new Set(results.flatMap(r => r.result))];
+      const ul = document.getElementById("results");
+      ul.innerHTML = ids.map(id => {
+        const p = products.find(p => p.ITEM_ID === id);
+        return `<li><a href="${p.URL}" target="_blank">
+                  <img src="${p.IMGURL}" alt=""> 
+                  <strong>${p.PRODUCTNAME}</strong><br>
+                  Cena: ${p.PRICE} Kč<br>
+                  <small>${p.DESCRIPTION.slice(0, 120)}...</small>
+                </a></li>`;
+      }).join("");
+    });
+
+    loadJSONFeed();
+  </script>
+</body>
+</html>
