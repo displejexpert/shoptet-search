@@ -5,34 +5,33 @@
     <meta charset="UTF-8">
     <title>Vyhledávání produktů z Shoptet feedu</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        input { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 20px; }
-        .product { border-bottom: 1px solid #ccc; padding: 10px 0; }
-        .product strong { display: block; font-size: 18px; }
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+        input { width: 100%; padding: 12px; font-size: 16px; margin-bottom: 20px; }
+        .product { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .product strong { font-size: 18px; display: block; }
         .product .price { color: green; font-weight: bold; }
-        .product .stock { color: blue; }
+        .product .stock { color: #0066cc; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <h1>🔍 Vyhledávání produktů z Shoptet feedu</h1>
+    <h1>🔍 Vyhledávání produktů</h1>
     <input type="text" id="search" placeholder="Zadej název produktu...">
     <div id="results"></div>
 
     <script>
         const searchInput = document.getElementById("search");
         const resultsDiv = document.getElementById("results");
-
         let products = [];
 
-        fetch("https://www.krytnamobil.cz/heureka/export/products.xml")
+        fetch("https://www.krytnamobil.cz/products.xml")
             .then(response => response.text())
             .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
             .then(data => {
-                const items = data.querySelectorAll("SHOP > SHOPITEM");
+                const items = data.querySelectorAll("SHOPITEM");
                 products = Array.from(items).map(item => ({
                     name: item.querySelector("PRODUCTNAME")?.textContent || "",
-                    price: item.querySelector("PRICE_VAT")?.textContent || "",
-                    stock: item.querySelector("DELIVERY_DATE")?.textContent || "N/A"
+                    price: item.querySelector("PRICE_VAT")?.textContent || "neuvedena",
+                    stock: item.querySelector("STOCK")?.textContent || "neznámá"
                 }));
             });
 
@@ -43,7 +42,7 @@
                 <div class="product">
                     <strong>${p.name}</strong>
                     <div class="price">Cena: ${p.price} Kč</div>
-                    <div class="stock">Dostupnost (kód): ${p.stock}</div>
+                    <div class="stock">Sklad: ${p.stock}</div>
                 </div>
             `).join("");
         });
