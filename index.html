@@ -1,49 +1,52 @@
+
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <title>Fulltextové vyhledávání produktů (Shoptet)</title>
-  <script src="https://cdn.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-    input { width: 100%; padding: 10px; font-size: 1.2em; }
-    ul { list-style: none; padding: 0; }
-    li { border-bottom: 1px solid #ccc; padding: 10px 0; }
-    img { max-width: 100px; vertical-align: middle; margin-right: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Vyhledávání produktů z Shoptet feedu</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        input { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 20px; }
+        .product { border-bottom: 1px solid #ccc; padding: 10px 0; }
+        .product strong { display: block; font-size: 18px; }
+        .product .price { color: green; font-weight: bold; }
+        .product .stock { color: blue; }
+    </style>
 </head>
 <body>
-  <h2>🔍 Vyhledávání produktů z Shoptet feedu</h2>
-  <input type="text" id="search" placeholder="Zadej název, EAN nebo popis...">
-  <ul id="results"></ul>
-  <script>
-    const index = new FlexSearch.Document({ document: { id: "ITEM_ID", index: ["PRODUCTNAME", "DESCRIPTION", "EAN"] } });
-    let products = [];
+    <h1>🔍 Vyhledávání produktů z Shoptet feedu</h1>
+    <input type="text" id="search" placeholder="Zadej název produktu...">
+    <div id="results"></div>
 
-    async function loadJSONFeed() {
-      const response = await fetch("products.json");
-      const data = await response.json();
-      products = data;
-      products.forEach(product => index.add(product));
-    }
+    <script>
+        const searchInput = document.getElementById("search");
+        const resultsDiv = document.getElementById("results");
 
-    document.getElementById("search").addEventListener("input", async e => {
-      const query = e.target.value;
-      const results = await index.searchAsync(query, { enrich: true });
-      const ids = [...new Set(results.flatMap(r => r.result))];
-      const ul = document.getElementById("results");
-      ul.innerHTML = ids.map(id => {
-        const p = products.find(p => p.ITEM_ID === id);
-        return `<li><a href="${p.URL}" target="_blank">
-                  <img src="${p.IMGURL}" alt=""> 
-                  <strong>${p.PRODUCTNAME}</strong><br>
-                  Cena: ${p.PRICE} Kč<br>
-                  <small>${p.DESCRIPTION.slice(0, 120)}...</small>
-                </a></li>`;
-      }).join("");
-    });
+        let products = [];
 
-    loadJSONFeed();
-  </script>
+        fetch("https://www.krytnamobil.cz/heureka/export/products.xml")
+            .then(response => response.text())
+            .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
+            .then(data => {
+                const items = data.querySelectorAll("SHOP > SHOPITEM");
+                products = Array.from(items).map(item => ({
+                    name: item.querySelector("PRODUCTNAME")?.textContent || "",
+                    price: item.querySelector("PRICE_VAT")?.textContent || "",
+                    stock: item.querySelector("DELIVERY_DATE")?.textContent || "N/A"
+                }));
+            });
+
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            resultsDiv.innerHTML = filtered.map(p => `
+                <div class="product">
+                    <strong>${p.name}</strong>
+                    <div class="price">Cena: ${p.price} Kč</div>
+                    <div class="stock">Dostupnost (kód): ${p.stock}</div>
+                </div>
+            `).join("");
+        });
+    </script>
 </body>
 </html>
