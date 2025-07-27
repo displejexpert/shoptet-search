@@ -1,29 +1,52 @@
-name: Update JSON from XML feed
+name: Update XML from XML feed # Lepší název, protože cílem je XML pro Shoptet
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *' # každou hodinu
+
 permissions:
-  contents: write
+  contents: write # Toto je stále potřeba a je správně
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          # Toto je klíčové! Umožňuje checkoutu použít GITHUB_TOKEN
+          # k zápisu zpět do repozitáře.
+          token: ${{ secrets.GITHUB_TOKEN }} 
+
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.x'
+
       - name: Install dependencies
         run: pip install requests xmltodict
+
       - name: Download XML feed
         run: curl -s https://www.krytnamobil.cz/products.xml -o products.xml
+
       - name: Run script
         run: python convert.py
+
       - name: Commit and push
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add shoptet_products.xml
-          git commit -m "Update shoptet_products.xml" || echo "No changes to commit"
+          git config user.name 'github-actions'
+          git config user.email 'github-actions@github.com'
+          
+          # Stáhne nejnovější změny, aby nedošlo ke konfliktu
+          git pull origin main --rebase 
+          
+          # Zde použijeme název souboru, který generuje váš Python skript
+          # V mém předchozím příkladu `convert.py` generoval `shoptet_products.xml`.
+          # Pokud jste `convert.py` nezměnili, stále generuje `products.json`.
+          # Zde předpokládám, že jste `convert.py` upravili na `shoptet_products.xml`.
+          git add shoptet_products.xml 
+          
+          git commit -m "Update Shoptet XML feed" || echo "No changes to commit"
+          
+          # Toto je klíčové: Použijeme GITHUB_TOKEN pro autentizaci při pushování
           git push
