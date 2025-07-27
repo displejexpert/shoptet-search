@@ -1,38 +1,30 @@
 name: Update JSON from XML feed
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *' # každou hodinu
-
+    - cron: '0 * * * *'
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.x'
-
       - name: Install dependencies
         run: pip install requests xmltodict
-
       - name: Download XML feed
         run: curl -s https://www.krytnamobil.cz/products.xml -o products.xml
-
       - name: Run script
         run: python convert.py
-
       - name: Commit and push
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           git pull origin main --rebase
-          git add data.json
-          git commit -m "Update data.json" || echo "No changes to commit"
+          git add shoptet_products.xml
+          git commit -m "Update shoptet_products.xml" || echo "No changes to commit"
           git push
