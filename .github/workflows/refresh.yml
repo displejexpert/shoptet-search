@@ -3,7 +3,8 @@ name: Update JSON from XML feed
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'  # každou hodinu
+    - cron: '0 * * * *' # každou hodinu
+
 permissions:
   contents: write
 
