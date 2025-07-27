@@ -1,4 +1,4 @@
-name: Update JSON from XML feed # Název workflow (ponechávám původní, ačkoliv bych doporučil "Update Shoptet XML from XML feed" po úpravě convert.py)
+name: Update Shoptet XML from XML feed
 
 on:
   workflow_dispatch:
@@ -14,7 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          # TOTO JE KLÍČOVÁ ZMĚNA: Předává GITHUB_TOKEN pro autentizaci
           token: ${{ secrets.GITHUB_TOKEN }} 
 
       - name: Set up Python
@@ -35,15 +34,7 @@ jobs:
         run: |
           git config user.name 'github-actions'
           git config user.email 'github-actions@github.com'
-          
-          # Stáhne nejnovější změny, aby se předešlo konfliktům
-          git pull origin main --rebase 
-          
-          # DŮLEŽITÉ: Zde je stále data.json. Pokud jste upravili convert.py,
-          # aby generoval shoptet_products.xml, pak změňte i zde!
-          git add data.json 
-          
-          git commit -m "Update data.json" || echo "No changes to commit"
-          
-          # Toto je klíčové pro autentizaci push operace
+          git pull origin main --rebase
+          git add shoptet_products.xml
+          git commit -m "Update Shoptet XML feed" || echo "No changes to commit"
           git push
