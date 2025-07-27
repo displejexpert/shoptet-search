@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 * * * *' # každou hodinu
 
+permissions:
+contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
